@@ -441,3 +441,31 @@ SCALES: Mapping[str, Callable[[Scales], float]] = MappingProxyType(
 """Scales to make values dimensional, see [`Scales`][stagpy.dimensions.Scales]."""
 
 PREFIXES = ("k", "M", "G")
+
+PLATES: Mapping[str, Vart] = MappingProxyType(
+    {
+        "time": Vart("Time", "Time", "s"),
+        "Rtp_vol": Vart("Toroidal/poloidal ration (volume)", "Ratio", "1"),
+        "Rtp_surf": Vart("Toroidal/poloidal ration (surface)", "Ratio", "1"),
+        "Mob": Vart("Plates mobility", "Mobility", "1"),
+        "f80": Vart("Fraction of mobile surface", "Fraction", "1"),
+        "Vrms": Vart("rms velocity", "Velocity", "m/s"),
+        "Vsurf_rms": Vart("Surface rms velocity", "Velocity", "m/s"),
+    }
+)
+"""Plates analyse output by StagYY."""
+
+PLATES_EXTRA: Mapping[str, Callable[[StagyyData], Tseries]] = MappingProxyType(
+    {
+        "plateness": processing.plateness,
+    }
+)
+"""Plates analyse that StagPy can compute."""
+
+PLATES_ALIAS: Mapping[str, str] = MappingProxyType(
+    {
+        "t": "time",
+        "mobility": "Mob",
+    }
+)
+"""Plate analyse name aliases."""

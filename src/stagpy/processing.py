@@ -293,3 +293,22 @@ def stream_function(step: Step) -> Field:
         psi = -psi
     psi = np.reshape(psi, shape)
     return Field(psi, "Stream function", "m2/s")
+
+def plateness(sdat: StagyyData) -> Tseries:
+    """Surface plateness.
+
+    Compute the ratio 1-f80/0.6. (Lourenço et al. 2020)
+
+    Args:
+        sdat: a `StagyyData` instance.
+
+    Returns:
+        plateness and time arrays.
+    """
+    time = []
+    plat = 1 - (sdat.plates_analyse["f80"].values / 0.6)
+    for step in sdat.snaps:
+        time.append(step.timeinfo["time"])
+    return Tseries(
+        np.array(plat), np.array(time), Vart("Surface Plateness", "plateness", "1")
+    )

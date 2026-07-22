@@ -685,6 +685,11 @@ class StagyyData:
         return Tseries(self)
 
     @cached_property
+    def plates_analyse(self) -> PlatesAnalyse:
+        """Plate analysis data."""
+        return PlatesAnalyse(self)
+
+    @cached_property
     def refstate(self) -> Refstate:
         """Reference state profiles."""
         return Refstate(self)
@@ -801,3 +806,103 @@ class StagyyData:
         if timeh5.is_file():
             return StepSnapH5(timeh5=timeh5)
         return StepSnapLegacy(sdat=self)
+
+@dataclass(frozen=True)
+class PlatesAnalyse:
+    """Plate analysis.
+
+    The `StagyyData.plates_analysis` attribute is an instance of this class.
+
+    `PlatesAnalyse` implements the getitem mechanism.  Keys are series names
+    defined in `stagpy.phyvars.PLATES[_EXTRA]`.  Items are
+    [stagpy.datatypes.Tseries][] instances.
+    """
+
+    sdat: StagyyData
+
+    @cached_property
+    def _cached_extra(self) -> dict[str, dt.Tseries]:
+        return {}
+
+    @cached_property
+    def _data(self) -> DataFrame | None:
+        pfile = self.sdat._find_file("plates_analyse.dat")
+        if pfile is not None:
+            return parsers.txt.plates_analyse(pfile)
+        return None
+
+    @property
+    def _plates(self) -> DataFrame:
+        if self._data is None:
+            raise error.MissingDataError(f"No plates_analyse data in {self.sdat}")
+        return self._data
+
+    def __getitem__(self, name: str) -> dt.Tseries:
+        if (name_alias := phyvars.PLATES_ALIAS.get(name)) is not None:
+            name = name_alias
+
+        series: NDArray[np.float64]
+        if name in self._plates.columns:
+            series = self._plates[name].to_numpy(dtype=np.float64)
+            time = self.time
+            if name in phyvars.PLATES:
+                meta = phyvars.PLATES[name]
+            else:
+                meta = dt.Vart(name, "", "1")
+        elif name in self._cached_extra:
+            tseries = self._cached_extra[name]
+            series = tseries.values
+            time = tseries.time
+            meta = tseries.meta
+        elif name in phyvars.PLATES_EXTRA:
+            self._cached_extra[name] = phyvars.PLATES_EXTRA[name](self.sdat)
+            tseries = self._cached_extra[name]
+            series = tseries.values
+            time = tseries.time
+            meta = tseries.meta
+        else:
+            raise error.UnknownTimeVarError(name)
+        return dt.Tseries(series, time, meta)
+
+    def tslice(
+        self, name: str, tstart: float | None = None, tend: float | None = None
+    ) -> dt.Tseries:
+        """Return a [`Tseries`][stagpy.datatypes.Tseries] between specified times.
+
+        Args:
+            name: time variable.
+            tstart: starting time. Set to None to start at the beginning of
+                available data.
+            tend: ending time. Set to None to stop at the end of available
+                data.
+        """
+        series = self[name]
+        istart = 0
+        iend = len(series.time)
+        if tstart is not None:
+            istart = _helpers.find_in_sorted_arr(tstart, series.time)
+        if tend is not None:
+            iend = _helpers.find_in_sorted_arr(tend, series.time, True) + 1
+        return dt.Tseries(
+            series.values[istart:iend],
+            series.time[istart:iend],
+            series.meta,
+        )
+
+    @property
+    def time(self) -> NDArray[np.float64]:
+        """Time vector."""
+        return self._plates["time"].to_numpy(dtype=np.float64)
+
+    @property
+    def isteps(self) -> NDArray[np.float64]:
+        """Step indices.
+
+        This is such that `time[istep]` is at step `isteps[istep]`.
+        """
+        return self._plates.index.values
+
+    def at_step(self, istep: int) -> Series[np.float64]:
+        """Plates analysis output for a given step."""
+        return self._plates.loc[istep]  # type: ignore
+

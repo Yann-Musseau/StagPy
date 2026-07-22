@@ -346,7 +346,8 @@ class Fields:
             return list_fvar, parsed_data
 
         sdat = self.step.sdat
-        if filestem in phyvars.SFIELD.h5_files:
+        #YM - if filestem in phyvars.SFIELD.h5_files:
+        if name in phyvars.SFIELD:
             xmff = sdat._botxmf if name.endswith("bot") else sdat._topxmf
         else:
             xmff = sdat._dataxmf

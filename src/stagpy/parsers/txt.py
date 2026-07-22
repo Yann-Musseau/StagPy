@@ -235,3 +235,51 @@ def refstate(
     cols = adiabats.pop(0)
     adia.append(pd.DataFrame(data.iloc[ibgn:iend, : len(cols)].values, columns=cols))
     return syst, adia
+
+def plates_analyse(pafile: Path) -> DataFrame | None:
+    """Read plate analysis text file.
+
+    Args:
+        pafile: path of the plates_analyse.dat file.
+
+    Returns:
+        A `pandas.DataFrame` containing the time series, organized by
+            variables in columns and time steps in rows.
+    """
+    if not pafile.is_file():
+        return None
+
+    with pafile.open() as fid:
+        colnames = [c.lstrip("#") for c in fid.readline().strip().split()] # Remove #prefixe
+    # extra columns in case some were added mid-run
+    resize(colnames, len(colnames) + 10)
+
+    data = pd.read_csv(
+        pafile,
+        sep=r"\s+",
+        dtype=str,
+        header=None,
+        names=colnames,
+        skiprows=1,
+        index_col="istep",
+        engine="c",
+        memory_map=True,
+        on_bad_lines="skip",
+    )
+    data = data.apply(pd.to_numeric, raw=True, errors="coerce")
+    
+    # detect useless lines produced when run is restarted
+    rows_to_del = []
+    irow = len(data) - 1
+    while irow > 0:
+        iprev = irow - 1
+        while iprev >= 0 and data.index[irow] <= data.index[iprev]:
+            rows_to_del.append(iprev)
+            iprev -= 1
+        irow = iprev
+    if rows_to_del:
+        rows_to_keep = set(range(len(data))) - set(rows_to_del)
+        data = data.take(list(rows_to_keep))
+    data.dropna(axis="columns", how="all", inplace=True)
+
+    return data
