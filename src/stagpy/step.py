@@ -588,7 +588,7 @@ class Step:
         return Fields(
             self,
             phyvars.SFIELD,
-            {},
+            phyvars.SFIELD_EXTRA,
             self.sdat._sfield_cache,
         )
 

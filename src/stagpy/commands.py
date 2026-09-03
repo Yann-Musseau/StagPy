@@ -87,7 +87,7 @@ def var_cmd(conf: Config) -> None:
         console.print()
     if print_all or conf.var.sfield:
         console.rule("surface fields", style="magenta")
-        console.print(_layout(phyvars.SFIELD.variables, {}))
+        console.print(_layout(phyvars.SFIELD.variables, phyvars.SFIELD_EXTRA))
         console.print()
     if print_all or conf.var.rprof:
         console.rule("radial profiles", style="magenta")

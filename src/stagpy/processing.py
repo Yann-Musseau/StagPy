@@ -312,3 +312,36 @@ def plateness(sdat: StagyyData) -> Tseries:
     return Tseries(
         np.array(plat), np.array(time), Vart("Surface Plateness", "plateness", "1")
     )
+
+def meltcol(step: Step) -> Field:
+    """Depth-averaged melt fraction.
+
+    Average of meltfrac over the z direction, weighted by cell thickness,
+    giving a surface field of the mean melt fraction in the column below
+    each surface point.
+
+    Args:
+        step: a `Step` of a `StagyyData` instance.
+
+    Returns:
+        the depth-averaged melt fraction as a surface field.
+    """
+    meltfrac = step.fields["meltfrac"].values
+    dz = np.diff(step.geom.r_walls)
+    weights = dz[np.newaxis, np.newaxis, :, np.newaxis]
+    avg = np.sum(meltfrac * weights, axis=2, keepdims=True) / np.sum(weights)
+    return Field(avg, "Depth-averaged melt fraction", "1")
+
+def meltfrac_prof(step: Step) -> Rprof:
+    """Mean melt fraction.
+
+    Args:
+        step: a `Step` of a `StagyyData` instance.
+
+    Returns:
+        the melt fraction and radius.
+    """
+    meltfrac = step.fields["meltfrac"].values	
+    avg = meltfrac.mean(axis=(0, 1, 3))
+    rad = step.rprofs.centers
+    return Rprof(avg, rad, Varr("Melt fraction", "Melt fraction", "1"))

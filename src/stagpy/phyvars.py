@@ -152,9 +152,20 @@ SFIELD: FieldVars = FieldVars.from_dict(
         ),
         "fstop": Varf("Heat flux from spectrum at top", "W/m2", "hfs", "TopHFSpectrum"),
         "crust": Varf("Crustal thickness", "m", "cr", "CrustThickness"),
+        "erupta_2D": Varf("Erupta_2D", "kg", "erup", "Erupta_2D"),
+        "intruda_2D": Varf("Intruda_2D", "kg", "intr", "Intruda_2D"),
+        "erupta_2D_cumul": Varf("Erupta_2D", "kg", "erupc", "Erupta_2D_cumul"),
+        "intruda_2D_cumul": Varf("Intruda_2D", "kg", "intrc", "Intruda_2D_cumul"),
     }
 )
 """Surface scalar fields output by StagYY."""
+
+SFIELD_EXTRA: Mapping[str, Callable[[Step], Field]] = MappingProxyType(
+    {
+        "meltcol": processing.meltcol,
+    }
+)
+"""Surface scalar fields that StagPy can compute."""
 
 RPROF: Mapping[str, Varr] = MappingProxyType(
     {
@@ -261,6 +272,7 @@ RPROF_EXTRA: Mapping[str, Callable[[Step], Rprof]] = MappingProxyType(
         "advds": processing.advds_prof,
         "advas": processing.advas_prof,
         "energy": processing.energy_prof,
+        "meltfrac_prof": processing.meltfrac_prof,
     }
 )
 """Radial profiles that StagPy can compute."""
