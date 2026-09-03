@@ -154,8 +154,8 @@ SFIELD: FieldVars = FieldVars.from_dict(
         "crust": Varf("Crustal thickness", "m", "cr", "CrustThickness"),
         "erupta_2D": Varf("Erupta_2D", "kg", "erup", "Erupta_2D"),
         "intruda_2D": Varf("Intruda_2D", "kg", "intr", "Intruda_2D"),
-        "erupta_2D_cumul": Varf("Erupta_2D", "kg", "erupc", "Erupta_2D_cumul"),
-        "intruda_2D_cumul": Varf("Intruda_2D", "kg", "intrc", "Intruda_2D_cumul"),
+        "erupta_2D_cumul": Varf("Erupta_2D", "kg", "erupc", "Erupta_2D_Cumul"),
+        "intruda_2D_cumul": Varf("Intruda_2D", "kg", "intrc", "Intruda_2D_Cumul"),
     }
 )
 """Surface scalar fields output by StagYY."""
